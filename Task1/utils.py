@@ -31,7 +31,7 @@ def fit_predict_and_score(model, X_train, y_train, X_test, y_test):
         accuracy_score(y_test, y_pred), 
         precision_score(y_test, y_pred, average='macro'), 
         recall_score(y_test, y_pred, average='macro'))
-    print(f"    -> F1-Score: {f1*100:.2f}")
-    print(f"    -> Accuracy: {accuracy*100:.2f}")
-    print(f"    -> Precision: {precision*100:.2f}")
-    print(f"    -> Recall: {recall*100:.2f}")
+    print(f"    -> F1-Score: {f1*100:.2f}%")
+    print(f"    -> Accuracy: {accuracy*100:.2f}%")
+    print(f"    -> Precision: {precision*100:.2f}%")
+    print(f"    -> Recall: {recall*100:.2f}%")
