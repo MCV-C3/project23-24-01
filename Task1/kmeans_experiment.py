@@ -15,6 +15,7 @@ train_images_filenames = ['..' + n[15:] for n in train_images_filenames]
 test_images_filenames  = ['..' + n[15:] for n in test_images_filenames]
 train_labels = pickle.load(open('../MIT_split/train_labels.dat','rb')) 
 test_labels = pickle.load(open('../MIT_split/test_labels.dat','rb'))
+
 def objective(trial):
     # Sample hyperparameters
     k_means_clusters = trial.suggest_int('k_means_clusters', 64, 448, step=128)
