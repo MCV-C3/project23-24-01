@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from sklearn.metrics import multilabel_confusion_matrix
+from sklearn.metrics import multilabel_confusion_matrix, accuracy_score
 import numpy as np
 
 def display_multilabel_confusion_matrix(visual_words_test, test_labels, model):
@@ -22,3 +22,8 @@ def display_multilabel_confusion_matrix(visual_words_test, test_labels, model):
 
     plt.tight_layout()
     plt.show()
+    
+def fit_predict_and_score(model, X_train, y_train, X_test, y_test):
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    return accuracy_score(y_test, y_pred)
