@@ -2,8 +2,14 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import multilabel_confusion_matrix, accuracy_score, f1_score, precision_score, recall_score
 import numpy as np
 
-def display_multilabel_confusion_matrix(visual_words_test, test_labels, model):
-    cm = multilabel_confusion_matrix(model.predict(visual_words_test), test_labels)
+def display_multilabel_confusion_matrix(visual_words_test, test_labels, model, mapping=None):
+    if mapping is not None:
+        predictions_numeric = model.predict(visual_words_test)
+        label_mapping_inverse = {idx: label for label, idx in mapping.items()}
+        predictions = np.array([label_mapping_inverse[idx] for idx in predictions_numeric])
+        cm = multilabel_confusion_matrix(predictions, test_labels)
+    else:
+        cm = multilabel_confusion_matrix(model.predict(visual_words_test), test_labels)
 
     _, axes = plt.subplots(2, 4, figsize=(15, 15))
     for i, (matrix, ax) in enumerate(zip(cm, axes.flatten())):
