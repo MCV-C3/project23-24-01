@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
-from sklearn.metrics import multilabel_confusion_matrix, accuracy_score, f1_score, precision_score, recall_score
+from sklearn.metrics import multilabel_confusion_matrix, accuracy_score, f1_score, precision_score, recall_score, roc_curve, auc
 import numpy as np
+from sklearn.preprocessing import LabelEncoder, label_binarize
 
 def display_multilabel_confusion_matrix(visual_words_test, test_labels, model, mapping=None):
     if mapping is not None:
@@ -41,3 +42,39 @@ def fit_predict_and_score(model, X_train, y_train, X_test, y_test):
     print(f"    -> Accuracy: {accuracy*100:.2f}%")
     print(f"    -> Precision: {precision*100:.2f}%")
     print(f"    -> Recall: {recall*100:.2f}%")
+    
+def plot_roc_curve(visual_words_test, test_labels, model, model_name):
+    label_encoder = LabelEncoder()
+    y_test_encoded = label_encoder.fit_transform(test_labels)
+
+    # Binarize the labels
+    y_test_bin = label_binarize(y_test_encoded, classes=np.arange(8))
+
+    # Get the predicted probabilities for each class
+    if model_name == "SVM":
+        y_score = model.decision_function(visual_words_test)
+    else:
+        y_score = model.predict_proba(visual_words_test)
+
+    # Initialize the ROC curve plot
+    plt.figure(figsize=(10, 6))
+
+    # Compute ROC curve and ROC area for each class
+    for i in range(8):
+        fpr, tpr, _ = roc_curve(y_test_bin[:, i], y_score[:, i])
+        roc_auc = auc(fpr, tpr)
+        
+        # Retrieve the original string label
+        original_label = label_encoder.inverse_transform([i])[0]
+        
+        # Plot the ROC curve for each class with original label
+        plt.plot(fpr, tpr, label=f'{original_label} (AUC = {roc_auc:.2f})')
+
+    # Set plot details
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(f'ROC Curve for {model_name}')
+    plt.legend(loc="lower right")
+    plt.show()
