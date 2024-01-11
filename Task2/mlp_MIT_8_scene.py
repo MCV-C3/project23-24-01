@@ -13,7 +13,22 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
+import wandb
+from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
 
+wandb.login(key="d1eed7aeb7e90a11c24c3644ed2df2d6f2b25718")
+
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="c3_project",
+
+    # track hyperparameters and run metadata with wandb.config
+    config={"optimizer": "sgd",
+            "loss": "categorical_crossentropy",
+            "metric": "accuracy"}
+)
+
+config = wandb.config
 
 #user defined variables
 IMG_SIZE    = 32
@@ -81,11 +96,11 @@ input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
 model.add(Dense(units=2048, activation='relu',name='first'))
-#model.add(Dense(units=1024, activation='relu'))
+model.add(Dense(units=128, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
-model.compile(loss='categorical_crossentropy',
-              optimizer='sgd',
-              metrics=['accuracy'])
+model.compile(loss=config.loss,
+              optimizer=config.optimizer,
+              metrics=[config.metric])
 
 print(model.summary())
 plot_model(model, to_file='modelMLP.png', show_shapes=True, show_layer_names=True)
@@ -98,8 +113,17 @@ history = model.fit(
         train_dataset,
         epochs=50,
         validation_data=validation_dataset,
-        verbose=0)
+        verbose=0,
+        callbacks=[
+                      WandbMetricsLogger(log_freq=5),
+                      WandbModelCheckpoint("models")
+                    ])
 
+wandb.finish()
+
+# evaluate the model
+scores = model.evaluate(X, Y)
+print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
 
 print('Saving the model into '+MODEL_FNAME+' \n')
 model.save_weights(MODEL_FNAME)  # always save your weights after training or during training
@@ -124,7 +148,7 @@ plt.savefig('loss.jpg')
 
 #to get the output of a given layer
  #crop the model up to a certain layer
-layer = 'first'
+layer = 'last'
 model_layer = keras.Model(inputs=input, outputs=model.get_layer(layer).output)
 
 #get the features from images
