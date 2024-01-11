@@ -122,10 +122,6 @@ history = model.fit(
 
 wandb.finish()
 
-# evaluate the model
-scores = model.evaluate(X, Y)
-print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
-
 print('Saving the model into '+MODEL_FNAME+' \n')
 model.save_weights(MODEL_FNAME)  # always save your weights after training or during training
 
@@ -166,7 +162,7 @@ with open('training_features.dat', 'wb') as file:
 
 print("Saving test output features...")
 test_features = []
-for x, _ in test_dataset:
+for x, _ in validation_dataset:
   features = model_layer.predict(x/255.0)
   test_features.append(features)
 
@@ -190,3 +186,7 @@ print(f'classification for image {os.path.join(directory, os.listdir(directory)[
 print(classification/np.sum(classification,axis=1))
 
 print('Done!')
+
+# evaluate the model
+scores = model.evaluate(train_dataset, validation_dataset)
+print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
