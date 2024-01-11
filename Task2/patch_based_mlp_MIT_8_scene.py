@@ -29,17 +29,17 @@ if not os.path.exists(PATCHES_DIR):
   print('patxes generated!\n')
 
 # Data augmentation and preprocessing
-preprocessing_train = keras.Sequential([
-  keras.layers.Rescaling(1./255),
-  keras.layers.RandomFlip("horizontal")
+preprocessing_train = tf.keras.Sequential([
+  tf.keras.layers.Rescaling(1./255),
+  tf.keras.layers.RandomFlip("horizontal")
 ])
 
-preprocessing_validation = keras.Sequential([
-  keras.layers.Rescaling(1./255)
+preprocessing_validation = tf.keras.Sequential([
+  tf.keras.layers.Rescaling(1./255)
 ])
 
 # Load and preprocess the training dataset
-train_dataset = keras.utils.image_dataset_from_directory(
+train_dataset = tf.keras.utils.image_dataset_from_directory(
   directory=PATCHES_DIR+'/train/',
   labels='inferred',
   label_mode='categorical',
@@ -49,7 +49,7 @@ train_dataset = keras.utils.image_dataset_from_directory(
 )
 
 # Load and preprocess the validation dataset
-validation_dataset = keras.utils.image_dataset_from_directory(
+validation_dataset = tf.keras.utils.image_dataset_from_directory(
   directory=PATCHES_DIR+'/test/',
   labels='inferred',
   label_mode='categorical',
