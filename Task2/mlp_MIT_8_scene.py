@@ -5,7 +5,7 @@ from utils import *
 import keras
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Dense, Reshape, Input, Dropout
+from keras.layers import Dense, Reshape, Input, Dropout, Add
 from keras.utils import plot_model
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras import regularizers
@@ -34,10 +34,10 @@ wandb.init(
 config = wandb.config
 
 #user defined variables
-IMG_SIZE    = 64
+IMG_SIZE    = 32
 BATCH_SIZE  = 12
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-MODEL_FNAME = '/ghome/group01/weights/20240111_21_25.weights.h5'
+MODEL_FNAME = '/ghome/group01/weights/20240111_23_26.weights.h5'
 
 if not os.path.exists(DATASET_DIR):
   print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
@@ -98,13 +98,25 @@ model = Sequential()
 input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.01) ,name='first'))
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1) ,name='first'))
 model.add(Dropout(0.1))
-model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01) ,name='second'))
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
 model.add(Dropout(0.2))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.01) ,name='third'))
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
 model.add(Dropout(0.25))
-model.add(Dense(units=128, activation='relu', kernel_regularizer=regularizers.l2(0.01) , name='last'))
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
+model.add(Dropout(0.5))
+
+shortcut = model.get_layer(name='first').output
+main_path = model.layers[5].output 
+shortcut = Reshape((256,), name='shortcut_reshape')(shortcut)
+main_path = Add()([main_path, shortcut])
+
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
+model.add(Dropout(0.3))
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
+model.add(Dropout(0.2))
+model.add(Dense(units=128, activation='relu', kernel_regularizer=regularizers.l2(0.1) , name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
               optimizer=config.optimizer,
@@ -122,7 +134,7 @@ def lr_schedule(epoch):
   decay_rate = 0.9
   min_lr = 0.001
   
-  return max(base_lr * (decay_rate ** (epoch // 10)), min_lr)
+  return max(base_lr * (decay_rate ** (epoch // 20)), min_lr)
 
 # Early Stopping
 early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
@@ -130,7 +142,7 @@ early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_wei
 print('Start training...\n')
 history = model.fit(
         train_dataset,
-        epochs=80,
+        epochs=100,
         validation_data=validation_dataset,
         verbose=0,
         callbacks=[
