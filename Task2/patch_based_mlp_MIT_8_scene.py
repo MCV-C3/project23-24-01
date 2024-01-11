@@ -30,12 +30,12 @@ if not os.path.exists(PATCHES_DIR):
 
 # Data augmentation and preprocessing
 preprocessing_train = tf.keras.Sequential([
-  tf.keras.layers.Rescaling(1./255),
-  tf.keras.layers.RandomFlip("horizontal")
+  tf.keras.layers.experimental.preprocessing.Rescaling(1./255),
+  tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
 ])
 
 preprocessing_validation = tf.keras.Sequential([
-  tf.keras.layers.Rescaling(1./255)
+  tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
 ])
 
 # Load and preprocess the training dataset

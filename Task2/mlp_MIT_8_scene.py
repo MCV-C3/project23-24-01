@@ -58,12 +58,12 @@ validation_dataset = tf.keras.preprocessing.image_dataset_from_directory(
 
 # Data augmentation and preprocessing
 preprocessing_train = tf.keras.Sequential([
-  tf.keras.layers.Rescaling(1./255),
-  tf.keras.layers.RandomFlip("horizontal")
+  tf.keras.layers.experimental.preprocessing.Rescaling(1./255),
+  tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal")
 ])
 
 preprocessing_validation = tf.keras.Sequential([
-  tf.keras.layers.Rescaling(1./255)
+  tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
 ])
 
 train_dataset = train_dataset.map(lambda x, y: (preprocessing_train(x, training=True), y))
