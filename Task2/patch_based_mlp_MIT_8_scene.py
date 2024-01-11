@@ -39,7 +39,7 @@ preprocessing_validation = tf.keras.Sequential([
 ])
 
 # Load and preprocess the training dataset
-train_dataset = tf.keras.utils.image_dataset_from_directory(
+train_dataset = tf.keras.preprocessing.image_dataset_from_directory(
   directory=PATCHES_DIR+'/train/',
   labels='inferred',
   label_mode='categorical',
@@ -49,7 +49,7 @@ train_dataset = tf.keras.utils.image_dataset_from_directory(
 )
 
 # Load and preprocess the validation dataset
-validation_dataset = tf.keras.utils.image_dataset_from_directory(
+validation_dataset = tf.keras.preprocessing.image_dataset_from_directory(
   directory=PATCHES_DIR+'/test/',
   labels='inferred',
   label_mode='categorical',
