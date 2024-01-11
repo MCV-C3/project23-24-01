@@ -19,7 +19,7 @@ import numpy as np
 IMG_SIZE    = 32
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-MODEL_FNAME = '/ghome/group10/work/C3/my_first_mlp.weights.h5'
+MODEL_FNAME = '/ghome/group01/weights/my_first_mlp.weights.h5'
 
 if not os.path.exists(DATASET_DIR):
   print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
