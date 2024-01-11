@@ -13,6 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from PIL import Image
 import numpy as np
+import pickle
 import wandb
 from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
 
@@ -34,7 +35,7 @@ config = wandb.config
 IMG_SIZE    = 32
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-MODEL_FNAME = '/ghome/group01/weights/my_first_mlp.weights.h5'
+MODEL_FNAME = '/ghome/group01/weights/20240111_20_27.weights.h5'
 
 if not os.path.exists(DATASET_DIR):
   print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
@@ -150,6 +151,29 @@ plt.savefig('loss.jpg')
  #crop the model up to a certain layer
 layer = 'last'
 model_layer = keras.Model(inputs=input, outputs=model.get_layer(layer).output)
+
+print("Saving training output features...")
+train_features = []
+for x, _ in train_dataset:
+  features = model_layer.predict(x/255.0)
+  train_features.append(features)
+
+train_features = np.vstack(train_features)
+
+with open('training_features.dat', 'wb') as file:
+    pickle.dump(train_features, file)
+
+
+print("Saving test output features...")
+test_features = []
+for x, _ in test_dataset:
+  features = model_layer.predict(x/255.0)
+  test_features.append(features)
+
+test_features = np.vstack(test_features)
+
+with open('test_features.dat', 'wb') as file:
+    pickle.dump(test_features, file)
 
 #get the features from images
 directory = DATASET_DIR+'/test/coast'
