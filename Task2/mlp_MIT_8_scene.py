@@ -141,7 +141,7 @@ def lr_schedule(epoch):
   return max(base_lr * (decay_rate ** (epoch // 20)), min_lr)
 
 # Early Stopping
-early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_accuracy', patience=10, restore_best_weights=True)
 
 print('Start training...\n')
 history = model.fit(
@@ -184,6 +184,7 @@ plt.savefig(f'{formatted_datetime}_loss.jpg')
 layer = 'last'
 model_layer = keras.Model(inputs=input, outputs=model.get_layer(layer).output)
 
+"""
 print("Saving training output features...")
 train_features = []
 for x, _ in train_dataset:
@@ -206,6 +207,45 @@ test_features = np.vstack(test_features)
 
 with open('test_features.dat', 'wb') as file:
     pickle.dump(test_features, file)
+"""
+
+# get train and test labels
+train_labels = pickle.load(open('train_labels.dat','rb')) 
+test_labels = pickle.load(open('test_labels.dat','rb'))
+
+# get training features
+train_features = []
+train_directory = DATASET_DIR+'/train'
+class_folders = os.listdir(train_directory)
+
+for class_folder in class_folders:
+  class_path = os.path.join(DATASET_DIR, class_folder)
+  training_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg')]
+
+  for image_file in training_image_files:
+    x = np.asarray(Image.open(os.path.join(class_path, image_file)))
+    x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
+    features = model_layer.predict(x/255.0)
+    train_features.append(features)
+
+train_features = np.vstack(train_features)
+
+# get test features
+test_features = []
+test_directory = DATASET_DIR+'/test'
+class_folders = os.listdir(test_directory)
+
+for class_folder in class_folders:
+  class_path = os.path.join(test_directory, class_folder)
+  test_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg') or f.endswith('.png')]
+
+  for image in test_image_files:
+    x = np.asarray(Image.open(os.path.join(class_path, image_file)[0]))
+    x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
+    features = model_layer.predict(x/255.0)
+    test_features.append(features)
+
+test_features = np.vstack(test_features)
 
 #get the features from images
 directory = DATASET_DIR+'/test/coast'
@@ -220,5 +260,13 @@ print(features)
 classification = model.predict(x/255.0)
 print(f'classification for image {os.path.join(directory, os.listdir(directory)[0] )}:')
 print(classification/np.sum(classification,axis=1))
+
+print(f'Model validation accuracy: {model.val_accuracy}')
+
+# SVM
+classifier = svm.SVC(C=0.01, kernel='linear', gamma=1)
+classifier.fit(train_features,train_labels)
+accuracy = classifier.score(test_features, test_labels)
+print('SVM accuracy: ', accuracy)
 
 print('Done!')
