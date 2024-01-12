@@ -117,7 +117,7 @@ model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
 model.add(Dense(units=2048, activation='relu',name='first'))
 model.add(Dropout(0.5))
-model.add(Dense(units=1024, activation='relu',name='first'))
+model.add(Dense(units=1024, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(units=512, activation='relu'))
 model.add(Dropout(0.5))
