@@ -10,6 +10,7 @@ from keras.layers import Dense, Reshape, Input, Dropout, Add
 from keras.utils import plot_model
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras import regularizers
+from sklearn.svm import SVC
 
 import matplotlib
 matplotlib.use('Agg')
@@ -115,11 +116,11 @@ input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
 model.add(Dense(units=1024, activation='relu',name='first'))
-#model.add(Dropout(0.2))
+model.add(Dropout(0.2))
 model.add(Dense(units=512, activation='relu'))
-#model.add(Dropout(0.2))
+model.add(Dropout(0.2))
 model.add(Dense(units=256, activation='relu'))
-#model.add(Dropout(0.1))
+model.add(Dropout(0.1))
 model.add(Dense(units=128, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
@@ -213,6 +214,7 @@ with open('test_features.dat', 'wb') as file:
 train_labels = pickle.load(open('train_labels.dat','rb')) 
 test_labels = pickle.load(open('test_labels.dat','rb'))
 
+print('Getting Training Features...')
 # get training features
 train_features = []
 train_directory = DATASET_DIR+'/train'
@@ -230,6 +232,7 @@ for class_folder in class_folders:
 
 train_features = np.vstack(train_features)
 
+print('Getting Test Features...')
 # get test features
 test_features = []
 test_directory = DATASET_DIR+'/test'
@@ -240,7 +243,7 @@ for class_folder in class_folders:
   test_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg') or f.endswith('.png')]
 
   for image in test_image_files:
-    x = np.asarray(Image.open(os.path.join(class_path, image_file)[0]))
+    x = np.asarray(Image.open(os.path.join(class_path, image_file)))
     x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
     features = model_layer.predict(x/255.0)
     test_features.append(features)
