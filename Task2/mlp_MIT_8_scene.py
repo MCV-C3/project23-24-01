@@ -1,5 +1,6 @@
 import os
 os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "jax" or "torch"!
+from datetime import datetime
 
 from utils import *
 import keras
@@ -33,11 +34,16 @@ wandb.init(
 
 config = wandb.config
 
+current_datetime = datetime.now()
+
+# Format the date and time as a string (YYYYMMDD_HH_MM)
+formatted_datetime = current_datetime.strftime("%Y%m%d_%H_%M")
+
 #user defined variables
 IMG_SIZE    = 32
 BATCH_SIZE  = 12
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-MODEL_FNAME = '/ghome/group01/weights/20240111_23_26.weights.h5'
+MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}.weights.h5'
 
 if not os.path.exists(DATASET_DIR):
   print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
