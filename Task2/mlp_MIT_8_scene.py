@@ -107,19 +107,20 @@ main_path = Add()([main_path, shortcut])
 """
 
 reg_rate = 0.01
+# , kernel_regularizer=regularizers.l1(reg_rate) 
 
 #Build the Multi Layer Perceptron model
 model = Sequential()
 input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l1(reg_rate) ,name='first'))
+model.add(Dense(units=1024, activation='relu',name='first'))
 #model.add(Dropout(0.2))
-model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(reg_rate)))
+model.add(Dense(units=512, activation='relu'))
 #model.add(Dropout(0.2))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(reg_rate)))
+model.add(Dense(units=256, activation='relu'))
 #model.add(Dropout(0.1))
-model.add(Dense(units=128, activation='relu', kernel_regularizer=regularizers.l2(reg_rate) , name='last'))
+model.add(Dense(units=128, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
               optimizer=config.optimizer,
