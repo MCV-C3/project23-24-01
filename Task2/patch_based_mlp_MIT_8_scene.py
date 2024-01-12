@@ -10,7 +10,7 @@ from keras.utils import plot_model
 import numpy as np
 from PIL import Image
 from sklearn.feature_extraction import image
-import datetime
+from datetime import datetime
 
 current_datetime = datetime.now()
 
