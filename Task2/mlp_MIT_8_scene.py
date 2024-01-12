@@ -219,7 +219,7 @@ train_directory = DATASET_DIR+'/train'
 class_folders = os.listdir(train_directory)
 
 for class_folder in class_folders:
-  class_path = os.path.join(DATASET_DIR, class_folder)
+  class_path = os.path.join(train_directory, class_folder)
   training_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg')]
 
   for image_file in training_image_files:
