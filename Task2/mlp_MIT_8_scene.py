@@ -99,24 +99,27 @@ validation_dataset = validation_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
 print('Building MLP model...\n')
 
-#Build the Multi Layer Perceptron model
-model = Sequential()
-input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
-model.add(input) # Input tensor
-model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.1) ,name='first'))
-model.add(Dropout(0.2))
-model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
-model.add(Dropout(0.2))
-model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
-model.add(Dropout(0.1))
 """
 shortcut = model.get_layer(name='first').output
 main_path = model.layers[5].output 
 shortcut = Reshape((256,), name='shortcut_reshape')(shortcut)
 main_path = Add()([main_path, shortcut])
 """
-model.add(Dense(units=128, activation='relu', kernel_regularizer=regularizers.l2(0.1) , name='last'))
+
+reg_rate = 0.01
+
+#Build the Multi Layer Perceptron model
+model = Sequential()
+input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
+model.add(input) # Input tensor
+model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
+model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l1(reg_rate) ,name='first'))
+#model.add(Dropout(0.2))
+model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(reg_rate)))
+#model.add(Dropout(0.2))
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(reg_rate)))
+#model.add(Dropout(0.1))
+model.add(Dense(units=128, activation='relu', kernel_regularizer=regularizers.l2(reg_rate) , name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
               optimizer=config.optimizer,
