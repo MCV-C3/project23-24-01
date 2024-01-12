@@ -10,6 +10,7 @@ from keras.layers import Dense, Reshape, Input, Dropout, Add
 from keras.utils import plot_model
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras import regularizers
+from sklearn.svm import SVC
 
 import matplotlib
 matplotlib.use('Agg')
@@ -114,13 +115,15 @@ model = Sequential()
 input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=1024, activation='relu',name='first'))
-#model.add(Dropout(0.2))
-model.add(Dense(units=512, activation='relu'))
-#model.add(Dropout(0.2))
-model.add(Dense(units=256, activation='relu'))
-#model.add(Dropout(0.1))
-model.add(Dense(units=128, activation='relu', name='last'))
+model.add(Dense(units=2048, activation='swish',name='first'))
+model.add(Dropout(0.5))
+model.add(Dense(units=1024, activation='swish'))
+model.add(Dropout(0.5))
+model.add(Dense(units=512, activation='swish'))
+model.add(Dropout(0.5))
+model.add(Dense(units=256, activation='swish'))
+model.add(Dropout(0.5))
+model.add(Dense(units=128, activation='swish', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
               optimizer=config.optimizer,
@@ -138,15 +141,15 @@ def lr_schedule(epoch):
   decay_rate = 0.9
   min_lr = 0.001
   
-  return max(base_lr * (decay_rate ** (epoch // 20)), min_lr)
+  return max(base_lr * (decay_rate ** (epoch // 15)), min_lr)
 
 # Early Stopping
-early_stopping = EarlyStopping(monitor='val_accuracy', patience=10, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_accuracy', patience=20, restore_best_weights=True)
 
 print('Start training...\n')
 history = model.fit(
         train_dataset,
-        epochs=100,
+        epochs=150,
         validation_data=validation_dataset,
         verbose=0,
         callbacks=[
@@ -213,13 +216,14 @@ with open('test_features.dat', 'wb') as file:
 train_labels = pickle.load(open('train_labels.dat','rb')) 
 test_labels = pickle.load(open('test_labels.dat','rb'))
 
+print('Getting Training Features...')
 # get training features
 train_features = []
 train_directory = DATASET_DIR+'/train'
 class_folders = os.listdir(train_directory)
 
 for class_folder in class_folders:
-  class_path = os.path.join(DATASET_DIR, class_folder)
+  class_path = os.path.join(train_directory, class_folder)
   training_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg')]
 
   for image_file in training_image_files:
@@ -230,6 +234,7 @@ for class_folder in class_folders:
 
 train_features = np.vstack(train_features)
 
+print('Getting Test Features...')
 # get test features
 test_features = []
 test_directory = DATASET_DIR+'/test'
@@ -240,7 +245,7 @@ for class_folder in class_folders:
   test_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg') or f.endswith('.png')]
 
   for image in test_image_files:
-    x = np.asarray(Image.open(os.path.join(class_path, image_file)[0]))
+    x = np.asarray(Image.open(os.path.join(class_path, image_file)))
     x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
     features = model_layer.predict(x/255.0)
     test_features.append(features)
@@ -264,7 +269,7 @@ print(classification/np.sum(classification,axis=1))
 print(f'Model validation accuracy: {model.val_accuracy}')
 
 # SVM
-classifier = svm.SVC(C=0.01, kernel='linear', gamma=1)
+classifier = SVC(C=0.01, kernel='linear', gamma=1)
 classifier.fit(train_features,train_labels)
 accuracy = classifier.score(test_features, test_labels)
 print('SVM accuracy: ', accuracy)
