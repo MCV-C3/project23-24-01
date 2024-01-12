@@ -41,7 +41,7 @@ formatted_datetime = current_datetime.strftime("%Y%m%d_%H_%M")
 
 #user defined variables
 IMG_SIZE    = 32
-BATCH_SIZE  = 12
+BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
 MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}.weights.h5'
 
@@ -104,24 +104,18 @@ model = Sequential()
 input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1) ,name='first'))
-model.add(Dropout(0.1))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
+model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.1) ,name='first'))
 model.add(Dropout(0.2))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
-model.add(Dropout(0.25))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
-model.add(Dropout(0.5))
-
+model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
+model.add(Dropout(0.2))
+model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
+model.add(Dropout(0.1))
+"""
 shortcut = model.get_layer(name='first').output
 main_path = model.layers[5].output 
 shortcut = Reshape((256,), name='shortcut_reshape')(shortcut)
 main_path = Add()([main_path, shortcut])
-
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
-model.add(Dropout(0.3))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.1)))
-model.add(Dropout(0.2))
+"""
 model.add(Dense(units=128, activation='relu', kernel_regularizer=regularizers.l2(0.1) , name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
@@ -129,7 +123,7 @@ model.compile(loss=config.loss,
               metrics=[config.metric])
 
 print(model.summary())
-plot_model(model, to_file='modelMLP.png', show_shapes=True, show_layer_names=True)
+plot_model(model, to_file=f'{formatted_datetime}_modelMLP.png', show_shapes=True, show_layer_names=True)
 
 if os.path.exists(MODEL_FNAME):
   print('WARNING: model file '+MODEL_FNAME+' exists and will be overwritten!\n')
@@ -170,7 +164,7 @@ plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('accuracy.jpg')
+plt.savefig(f'{formatted_datetime}_accuracy.jpg')
 plt.close()
   # summarize history for loss
 plt.plot(history.history['loss'])
@@ -179,7 +173,7 @@ plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig('loss.jpg')
+plt.savefig(f'{formatted_datetime}_loss.jpg')
 
 #to get the output of a given layer
  #crop the model up to a certain layer
