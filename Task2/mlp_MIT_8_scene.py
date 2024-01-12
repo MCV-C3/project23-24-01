@@ -44,7 +44,9 @@ formatted_datetime = current_datetime.strftime("%Y%m%d_%H_%M")
 IMG_SIZE    = 32
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}.weights.h5'
+WEIGHTS_FNAME = f'/ghome/group01/weights/{formatted_datetime}_weights.h5'
+MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}_model.h5'
+
 
 if not os.path.exists(DATASET_DIR):
   print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
@@ -107,7 +109,6 @@ shortcut = Reshape((256,), name='shortcut_reshape')(shortcut)
 main_path = Add()([main_path, shortcut])
 """
 
-reg_rate = 0.01
 # , kernel_regularizer=regularizers.l1(reg_rate) 
 
 #Build the Multi Layer Perceptron model
@@ -115,15 +116,15 @@ model = Sequential()
 input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
-model.add(Dropout(0.6))
-model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-model.add(Dropout(0.6))
+#model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
+#model.add(Dropout(0.6))
 model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.5))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.5))
-model.add(Dense(units=128, activation='relu', name='last'))
+#model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.005)))
+#model.add(Dropout(0.5))
+model.add(Dense(units=256, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
               optimizer=config.optimizer,
@@ -157,15 +158,23 @@ history = model.fit(
         verbose=0,
         callbacks=[
                       WandbMetricsLogger(log_freq=5),
-                      WandbModelCheckpoint("models", save_weights=True),
+                      WandbModelCheckpoint("models", save_weights=True, save_model=True),
                       LearningRateScheduler(lr_schedule),
                       early_stopping
                     ])
 
-wandb.finish()
 
 print('Saving the model into '+MODEL_FNAME+' \n')
-model.save_weights(MODEL_FNAME)  # always save your weights after training or during training
+model.save_weights(WEIGHTS_FNAME)  # always save your weights after training or during training
+model.save(MODEL_FNAME)
+
+# "model.h5" is saved in wandb.run.dir & will be uploaded at the end of training
+model.save(os.path.join(wandb.run.dir, "model1.h5"))
+
+# Save a model file manually from the current directory:
+wandb.save('model11.h5')
+
+wandb.finish()
 
   # summarize history for accuracy
 plt.plot(history.history['accuracy'])
