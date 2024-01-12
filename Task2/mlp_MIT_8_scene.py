@@ -25,7 +25,7 @@ wandb.login(key="d1eed7aeb7e90a11c24c3644ed2df2d6f2b25718")
 
 wandb.init(
     # set the wandb project where this run will be logged
-    project="c3_project",
+    project="c3_project_2",
 
     # track hyperparameters and run metadata with wandb.config
     config={"optimizer": "sgd",
