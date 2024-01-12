@@ -21,8 +21,8 @@ formatted_datetime = current_datetime.strftime("%Y%m%d_%H_%M")
 PATCH_SIZE  = 64
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-PATCHES_DIR = '/ghome/group01/weights/data/MIT_split_patches'+str(PATCH_SIZE)
-MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}.weights.h5'
+PATCHES_DIR = '/ghome/group01/data/MIT_split_patches'+str(PATCH_SIZE)
+MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}_patch.weights.h5'
 
 
 if not os.path.exists(DATASET_DIR):
