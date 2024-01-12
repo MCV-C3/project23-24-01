@@ -115,13 +115,13 @@ model = Sequential()
 input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=2048, activation='relu',name='first'))
+model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
 model.add(Dropout(0.5))
-model.add(Dense(units=1024, activation='relu'))
+model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.5))
-model.add(Dense(units=512, activation='relu'))
+model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.5))
-model.add(Dense(units=256, activation='relu'))
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.5))
 model.add(Dense(units=128, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
@@ -141,7 +141,7 @@ def lr_schedule(epoch):
   decay_rate = 0.9
   min_lr = 0.001
   
-  return max(base_lr * (decay_rate ** (epoch // 15)), min_lr)
+  return max(base_lr * (decay_rate ** (epoch // 25)), min_lr)
 
 # Early Stopping
 early_stopping = EarlyStopping(monitor='val_accuracy', patience=20, restore_best_weights=True)
@@ -149,7 +149,7 @@ early_stopping = EarlyStopping(monitor='val_accuracy', patience=20, restore_best
 print('Start training...\n')
 history = model.fit(
         train_dataset,
-        epochs=150,
+        epochs=250,
         validation_data=validation_dataset,
         verbose=0,
         callbacks=[
@@ -242,9 +242,9 @@ class_folders = os.listdir(test_directory)
 
 for class_folder in class_folders:
   class_path = os.path.join(test_directory, class_folder)
-  test_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg') or f.endswith('.png')]
+  test_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg')]
 
-  for image in test_image_files:
+  for image_file in test_image_files:
     x = np.asarray(Image.open(os.path.join(class_path, image_file)))
     x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
     features = model_layer.predict(x/255.0)
