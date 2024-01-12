@@ -10,13 +10,19 @@ from keras.utils import plot_model
 import numpy as np
 from PIL import Image
 from sklearn.feature_extraction import image
+import datetime
+
+current_datetime = datetime.now()
+
+# Format the date and time as a string (YYYYMMDD_HH_MM)
+formatted_datetime = current_datetime.strftime("%Y%m%d_%H_%M")
 
 #user defined variables
 PATCH_SIZE  = 64
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-PATCHES_DIR = '/ghome/group10/work/C3/data/MIT_split_patches'+str(PATCH_SIZE)
-MODEL_FNAME = '/ghome/group10/work/C3/patch_based_mlp.weights.h5'
+PATCHES_DIR = '/ghome/group01/weights/data/MIT_split_patches'+str(PATCH_SIZE)
+MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}.weights.h5'
 
 
 if not os.path.exists(DATASET_DIR):
