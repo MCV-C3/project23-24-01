@@ -269,7 +269,7 @@ print(classification/np.sum(classification,axis=1))
 print(f'Model validation accuracy: {model.val_accuracy}')
 
 # SVM
-classifier = svm.SVC(C=0.01, kernel='linear', gamma=1)
+classifier = SVC(C=0.01, kernel='linear', gamma=1)
 classifier.fit(train_features,train_labels)
 accuracy = classifier.score(test_features, test_labels)
 print('SVM accuracy: ', accuracy)
