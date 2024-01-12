@@ -116,9 +116,9 @@ input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
 model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
-model.add(Dropout(0.5))
+model.add(Dropout(0.6))
 model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-model.add(Dropout(0.5))
+model.add(Dropout(0.6))
 model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.5))
 model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
@@ -140,11 +140,14 @@ def lr_schedule(epoch):
   base_lr = 0.01
   decay_rate = 0.9
   min_lr = 0.001
-  
-  return max(base_lr * (decay_rate ** (epoch // 25)), min_lr)
+
+  if epoch > 50:
+    return max(base_lr * (decay_rate ** (epoch // 25)), min_lr)
+  else:
+    return base_lr
 
 # Early Stopping
-early_stopping = EarlyStopping(monitor='val_accuracy', patience=20, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_accuracy', patience=30, restore_best_weights=True)
 
 print('Start training...\n')
 history = model.fit(
@@ -154,7 +157,7 @@ history = model.fit(
         verbose=0,
         callbacks=[
                       WandbMetricsLogger(log_freq=5),
-                      WandbModelCheckpoint("models"),
+                      WandbModelCheckpoint("models", save_weights=True),
                       LearningRateScheduler(lr_schedule),
                       early_stopping
                     ])
@@ -186,31 +189,6 @@ plt.savefig(f'{formatted_datetime}_loss.jpg')
  #crop the model up to a certain layer
 layer = 'last'
 model_layer = keras.Model(inputs=input, outputs=model.get_layer(layer).output)
-
-"""
-print("Saving training output features...")
-train_features = []
-for x, _ in train_dataset:
-  features = model_layer.predict(x/255.0)
-  train_features.append(features)
-
-train_features = np.vstack(train_features)
-
-with open('training_features.dat', 'wb') as file:
-    pickle.dump(train_features, file)
-
-
-print("Saving test output features...")
-test_features = []
-for x, _ in validation_dataset:
-  features = model_layer.predict(x/255.0)
-  test_features.append(features)
-
-test_features = np.vstack(test_features)
-
-with open('test_features.dat', 'wb') as file:
-    pickle.dump(test_features, file)
-"""
 
 # get train and test labels
 train_labels = pickle.load(open('train_labels.dat','rb')) 
@@ -266,7 +244,6 @@ classification = model.predict(x/255.0)
 print(f'classification for image {os.path.join(directory, os.listdir(directory)[0] )}:')
 print(classification/np.sum(classification,axis=1))
 
-print(f'Model validation accuracy: {model.val_accuracy}')
 
 # SVM
 classifier = SVC(C=0.01, kernel='linear', gamma=1)

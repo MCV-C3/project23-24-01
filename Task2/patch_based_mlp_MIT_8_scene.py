@@ -10,7 +10,23 @@ from keras.utils import plot_model
 import numpy as np
 from PIL import Image
 from sklearn.feature_extraction import image
-from datetime import datetime
+import datetime
+import wandb
+from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
+
+wandb.login(key="d1eed7aeb7e90a11c24c3644ed2df2d6f2b25718")
+
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="c3_project_patched",
+
+    # track hyperparameters and run metadata with wandb.config
+    config={"optimizer": "sgd",
+            "loss": "categorical_crossentropy",
+            "metric": "accuracy"}
+)
+
+config = wandb.config
 
 current_datetime = datetime.now()
 
@@ -21,8 +37,8 @@ formatted_datetime = current_datetime.strftime("%Y%m%d_%H_%M")
 PATCH_SIZE  = 64
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-PATCHES_DIR = '/ghome/group01/data/MIT_split_patches'+str(PATCH_SIZE)
-MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}_patch.weights.h5'
+PATCHES_DIR = '/ghome/group01/weights/data/MIT_split_patches'+str(PATCH_SIZE)
+MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}.weights.h5'
 
 
 if not os.path.exists(DATASET_DIR):
@@ -88,9 +104,9 @@ print('Building MLP model...\n')
 
 model = build_mlp(input_size=PATCH_SIZE)
 
-model.compile(loss='categorical_crossentropy',
-              optimizer='sgd',
-              metrics=['accuracy'])
+model.compile(loss=config.loss,
+              optimizer=config.optimizer,
+              metrics=[config.metric])
 
 print(model.summary())
 
@@ -103,8 +119,13 @@ if  not os.path.exists(MODEL_FNAME) or train:
   model.fit(train_dataset,
             epochs=150,
             validation_data=validation_dataset,
-            verbose=0)
-  
+            verbose=0,
+            callbacks=[
+                      WandbMetricsLogger(log_freq=5),
+                      WandbModelCheckpoint("models"),
+                    ])
+  wandb.finish()
+
   print('Saving the model into '+MODEL_FNAME+' \n')
   model.save_weights(MODEL_FNAME)  # always save your weights after training or during training
   print('Done!\n')
