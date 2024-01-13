@@ -5,7 +5,7 @@ from datetime import datetime
 from utils import *
 import keras
 import tensorflow as tf
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense, Reshape, Input, Dropout, Add
 from keras.utils import plot_model
 from keras.callbacks import LearningRateScheduler, EarlyStopping
@@ -53,7 +53,6 @@ RESULTS_DIR = '/ghome/group01/group01/project23-24-01/Task2/results/mlp_svm/'
 if not os.path.exists(DATASET_DIR):
   print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
   quit()
-
 
 print('Setting up data ...\n')
 
@@ -118,11 +117,8 @@ model = Sequential()
 input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
+model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
 model.add(Dropout(0.7))
-model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='second'))
-model.add(Dropout(0.7))
-model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='third'))
 model.add(Dense(units=128, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
@@ -145,60 +141,70 @@ def lr_schedule(epoch):
     return max(base_lr * (decay_rate ** (epoch // 25)), min_lr)
   else:
     return base_lr
+  
+def lr_ct(epoch):
+    base_lr = 0.01
+    return base_lr
 
 # Early Stopping
 early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
 
-print('Start training...\n')
-history = model.fit(
-        train_dataset,
-        epochs=250,
-        validation_data=validation_dataset,
-        verbose=0,
-        callbacks=[
-                      WandbMetricsLogger(log_freq=5),
-                      WandbModelCheckpoint("val_loss"),
-                      LearningRateScheduler(lr_schedule),
-                      early_stopping
-                    ])
+load = True
+if not load:
+  print('Start training...\n')
+  history = model.fit(
+          train_dataset,
+          epochs=250,
+          validation_data=validation_dataset,
+          verbose=0,
+          callbacks=[
+                        WandbMetricsLogger(log_freq=5),
+                        WandbModelCheckpoint("val_loss"),
+                        LearningRateScheduler(lr_ct),
+                        early_stopping
+                      ])
 
-print('Saving the model into W&B \n')
-model.save(os.path.join(wandb.run.dir, "model.h5"))
+  print('Saving the model into W&B \n')
+  model.save(os.path.join(wandb.run.dir, "model.h5"))
 
-wandb.finish()
+  wandb.finish()
 
-print('Saving the model into '+MODEL_FNAME+' \n')
-model.save(MODEL_FNAME)  # always save your weights after training or during training
-model.save_weights(WEIGHTS_FNAME)
-print('Done!\n')
+  print('Saving the model into '+MODEL_FNAME+' \n')
+  model.save(MODEL_FNAME)  # always save your weights after training or during training
+  model.save_weights(WEIGHTS_FNAME)
+  print('Done!\n')
 
-  # summarize history for accuracy
-plt.plot(history.history['accuracy'])
-plt.plot(history.history['val_accuracy'])
-plt.title('model accuracy')
-plt.ylabel('accuracy')
-plt.xlabel('epoch')
-plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_accuracy.jpg')
-plt.close()
-  # summarize history for loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('model loss')
-plt.ylabel('loss')
-plt.xlabel('epoch')
-plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_loss.jpg')
+    # summarize history for accuracy
+  plt.plot(history.history['accuracy'])
+  plt.plot(history.history['val_accuracy'])
+  plt.title('model accuracy')
+  plt.ylabel('accuracy')
+  plt.xlabel('epoch')
+  plt.legend(['train', 'validation'], loc='upper left')
+  plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_accuracy.jpg')
+  plt.close()
+    # summarize history for loss
+  plt.plot(history.history['loss'])
+  plt.plot(history.history['val_loss'])
+  plt.title('model loss')
+  plt.ylabel('loss')
+  plt.xlabel('epoch')
+  plt.legend(['train', 'validation'], loc='upper left')
+  plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_loss.jpg')
+
+else:
+  model.load_weights("/ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_20240113_17_00_weights.h5")
+
 
 #to get the output of a given layer
- #crop the model up to a certain layer
-layer = 'last'
-model_layer = keras.Model(inputs=input, outputs=model.get_layer(layer).output)
-model_initial_layer = keras.Model(inputs=input, outputs=model.get_layer("second").output)
+#crop the model up to a certain layer
+model_layer = keras.Model(inputs=input, outputs=model.get_layer('last').output)
+model_initial_layer = keras.Model(inputs=input, outputs=model.get_layer("first").output)
 
 # get train and test labels
 train_labels = pickle.load(open('data/train_labels.dat','rb')) 
 test_labels = pickle.load(open('data/test_labels.dat','rb'))
+
 
 print('Getting Training Features...')
 # get training features
