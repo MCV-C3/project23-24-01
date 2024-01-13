@@ -46,6 +46,7 @@ BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
 WEIGHTS_FNAME = f'/ghome/group01/weights/{formatted_datetime}_weights.h5'
 MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}_model.h5'
+RESULTS_DIR = '/ghome/group01/group01/project23-24-01/Task2/results/mlp_svm/'
 
 
 if not os.path.exists(DATASET_DIR):
@@ -118,10 +119,10 @@ model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
 #model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
 #model.add(Dropout(0.6))
-model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
 model.add(Dropout(0.7))
-model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-model.add(Dropout(0.7))
+#model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+#model.add(Dropout(0.7))
 #model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.005)))
 #model.add(Dropout(0.5))
 model.add(Dense(units=256, activation='relu', name='last'))
@@ -131,7 +132,7 @@ model.compile(loss=config.loss,
               metrics=[config.metric])
 
 print(model.summary())
-plot_model(model, to_file=f'{formatted_datetime}_modelMLP.png', show_shapes=True, show_layer_names=True)
+plot_model(model, to_file=f'{RESULTS_DIR}/{formatted_datetime}_modelMLP.png', show_shapes=True, show_layer_names=True)
 
 if os.path.exists(MODEL_FNAME):
   print('WARNING: model file '+MODEL_FNAME+' exists and will be overwritten!\n')
@@ -175,7 +176,7 @@ plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig(f'{formatted_datetime}_accuracy.jpg')
+plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_accuracy.jpg')
 plt.close()
   # summarize history for loss
 plt.plot(history.history['loss'])
@@ -184,12 +185,13 @@ plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig(f'{formatted_datetime}_loss.jpg')
+plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_loss.jpg')
 
 #to get the output of a given layer
  #crop the model up to a certain layer
 layer = 'last'
 model_layer = keras.Model(inputs=input, outputs=model.get_layer(layer).output)
+model_initial_layer = keras.Model(inputs=input, outputs=model.get_layer("first").output)
 
 # get train and test labels
 train_labels = pickle.load(open('data/train_labels.dat','rb')) 
@@ -198,6 +200,7 @@ test_labels = pickle.load(open('data/test_labels.dat','rb'))
 print('Getting Training Features...')
 # get training features
 train_features = []
+itrain_features = []
 train_directory = DATASET_DIR+'/train'
 class_folders = os.listdir(train_directory)
 
@@ -210,12 +213,16 @@ for class_folder in class_folders:
     x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
     features = model_layer.predict(x/255.0)
     train_features.append(features)
+    ifeatures = model_initial_layer.predict(x/255.0)
+    itrain_features.append(ifeatures)
 
 train_features = np.vstack(train_features)
+itrain_features = np.vstack(itrain_features)
 
 print('Getting Test Features...')
 # get test features
 test_features = []
+itest_features = []
 test_directory = DATASET_DIR+'/test'
 class_folders = os.listdir(test_directory)
 
@@ -228,22 +235,18 @@ for class_folder in class_folders:
     x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
     features = model_layer.predict(x/255.0)
     test_features.append(features)
+    ifeatures = model_initial_layer.predict(x/255.0)
+    itest_features.append(ifeatures)
 
 test_features = np.vstack(test_features)
+itest_features = np.vstack(itest_features)
 
-#get the features from images
-directory = DATASET_DIR+'/test/coast'
-x = np.asarray(Image.open(os.path.join(directory, os.listdir(directory)[0] )))
-x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
-print(f'prediction for image {os.path.join(directory, os.listdir(directory)[0] )} on  layer {layer}')
-features = model_layer.predict(x/255.0)
-print(features.shape)
-print(features)
+
 
 #get classification
-classification = model.predict(x/255.0)
-print(f'classification for image {os.path.join(directory, os.listdir(directory)[0] )}:')
-print(classification/np.sum(classification,axis=1))
+#classification = model.predict(x/255.0)
+#print(f'classification for image {os.path.join(directory, os.listdir(directory)[0] )}:')
+#print(classification/np.sum(classification,axis=1))
 
 
 # SVM
@@ -251,5 +254,10 @@ classifier = SVC(C=0.01, kernel='linear', gamma=1)
 classifier.fit(train_features,train_labels)
 accuracy = classifier.score(test_features, test_labels)
 print('SVM accuracy: ', accuracy)
+
+iclassifier = SVC(C=0.01, kernel='linear', gamma=1)
+iclassifier.fit(itrain_features,train_labels)
+accuracy = iclassifier.score(itest_features, test_labels)
+print('Init Layer SVM accuracy: ', accuracy)
 
 print('Done!')
