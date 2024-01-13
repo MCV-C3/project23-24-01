@@ -118,7 +118,7 @@ model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
 #model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
 #model.add(Dropout(0.6))
-model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.7))
 model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
 model.add(Dropout(0.7))
