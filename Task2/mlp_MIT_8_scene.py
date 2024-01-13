@@ -11,6 +11,7 @@ from keras.utils import plot_model
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras import regularizers
 from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
 
 import matplotlib
 matplotlib.use('Agg')
