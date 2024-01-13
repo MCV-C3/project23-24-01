@@ -16,7 +16,6 @@ from sklearn.feature_extraction import image
 from datetime import datetime
 import wandb
 from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
-from tensorflow.keras.optimizers import Adam
 
 wandb.login(key="d1eed7aeb7e90a11c24c3644ed2df2d6f2b25718")
 
@@ -95,15 +94,15 @@ validation_dataset = validation_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 def build_mlp(input_size=PATCH_SIZE, phase='train'):
     model = Sequential()
     model.add(Reshape((input_size * input_size * 3,), input_shape=(input_size, input_size, 3)))
-    model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
-    model.add(Dropout(0.7))
-    model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
-    model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dropout(0.5))
+    model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
     model.add(Dropout(0.7))
     if phase == 'test':
-        model.add(Dense(units=8, activation='linear', kernel_regularizer=regularizers.l2(0.001)))
+        model.add(Dense(units=8, activation='linear', kernel_regularizer=regularizers.l2(0.01)))
     else:
-        model.add(Dense(units=8, activation='softmax', kernel_regularizer=regularizers.l2(0.001)))
+        model.add(Dense(units=8, activation='softmax', kernel_regularizer=regularizers.l2(0.01)))
 
     return model
 
@@ -112,7 +111,7 @@ print('Building MLP model...\n')
 model = build_mlp(input_size=PATCH_SIZE)
 
 model.compile(loss=config.loss,
-              optimizer=Adam(learning_rate=0.001),# config.optimizer,
+              optimizer=config.optimizer,
               metrics=[config.metric])
 
 print(model.summary())
