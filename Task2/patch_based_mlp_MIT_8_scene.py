@@ -8,7 +8,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Dense, Reshape, Input, Dropout
+from keras.layers import Dense, Reshape, Dropout, BatchNormalization
 from keras.utils import plot_model
 import numpy as np
 from PIL import Image
@@ -16,6 +16,7 @@ from sklearn.feature_extraction import image
 from datetime import datetime
 import wandb
 from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
+from tensorflow.keras.optimizers import Adam
 
 wandb.login(key="d1eed7aeb7e90a11c24c3644ed2df2d6f2b25718")
 
@@ -92,23 +93,26 @@ validation_dataset = validation_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
 
 def build_mlp(input_size=PATCH_SIZE, phase='train'):
-  model = Sequential()
-  model.add(Reshape((input_size*input_size*3,),input_shape=(input_size, input_size, 3)))
-  model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-  model.add(Dropout(0.6))
-  model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-  if phase=='test':
-    model.add(Dense(units=8, activation='linear', kernel_regularizer=regularizers.l2(0.01))) # In test phase we softmax the average output over the image patches
-  else:
-    model.add(Dense(units=8, activation='softmax', kernel_regularizer=regularizers.l2(0.01)))
-  return model
+    model = Sequential()
+    model.add(Reshape((input_size * input_size * 3,), input_shape=(input_size, input_size, 3)))
+    model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.7))
+    model.add(Dense(units=128, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
+    model.add(BatchNormalization())
+    model.add(Dropout(0.7))
+    
+    if phase == 'test':
+        model.add(Dense(units=8, activation='linear', kernel_regularizer=regularizers.l2(0.001)))
+    else:
+        model.add(Dense(units=8, activation='softmax', kernel_regularizer=regularizers.l2(0.001)))
 
 print('Building MLP model...\n')
 
 model = build_mlp(input_size=PATCH_SIZE)
 
 model.compile(loss=config.loss,
-              optimizer=config.optimizer,
+              optimizer=Adam(learning_rate=0.001),# config.optimizer,
               metrics=[config.metric])
 
 print(model.summary())
