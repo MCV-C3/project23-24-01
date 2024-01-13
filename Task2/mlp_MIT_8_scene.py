@@ -124,7 +124,7 @@ model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2
 model.add(Dropout(0.7))
 #model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.005)))
 #model.add(Dropout(0.5))
-model.add(Dense(units=64, activation='relu', name='last'))
+model.add(Dense(units=256, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
               optimizer=config.optimizer,
