@@ -102,9 +102,9 @@ def build_mlp(input_size=PATCH_SIZE,phase='train'):
   model.add(Dropout(0.7))
   model.add(Dense(units=256, activation='relu', name='last'))
   if phase=='test':
-    model.add(Dense(units=8, activation='linear'), name='classification') # In test phase we softmax the average output over the image patches
+    model.add(Dense(units=8, activation='linear', name='classification')) # In test phase we softmax the average output over the image patches
   else:
-    model.add(Dense(units=8, activation='softmax'), name='classification')
+    model.add(Dense(units=8, activation='softmax', name='classification'))
   return model
 
 
