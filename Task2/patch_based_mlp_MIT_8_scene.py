@@ -13,7 +13,7 @@ from keras.utils import plot_model
 import numpy as np
 from PIL import Image
 from sklearn.feature_extraction import image
-import datetime
+from datetime import datetime
 import wandb
 from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
 
@@ -40,8 +40,8 @@ formatted_datetime = current_datetime.strftime("%Y%m%d_%H_%M")
 PATCH_SIZE  = 64
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-PATCHES_DIR = '/ghome/group01/weights/data/MIT_split_patches'+str(PATCH_SIZE)
-MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}_patch.weights.h5'
+PATCHES_DIR = '/ghome/group01/group01/project23-24-01/Task2/data/MIT_split_patches'+str(PATCH_SIZE)
+MODEL_FNAME = f'/ghome/group01/group01/project23-24-01/Task2/weights/{formatted_datetime}_patch.weights.h5'
 
 
 if not os.path.exists(DATASET_DIR):
@@ -147,7 +147,7 @@ plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig(f'results/mlp_patch/{formatted_datetime}_accuracy_patch.jpg')
+plt.savefig(f'/ghome/group01/group01/project23-24-01/Task2/results/mlp_patch/{formatted_datetime}_accuracy_patch.jpg')
 plt.close()
 
 # loss
@@ -157,7 +157,7 @@ plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig(f'results/mlp_patch/{formatted_datetime}_loss_patch.jpg')
+plt.savefig(f'/ghome/group01/group01/project23-24-01/Task2/results/mlp_patch/{formatted_datetime}_loss_patch.jpg')
 
 print('Building MLP model for testing...\n')
 

@@ -14,13 +14,14 @@ from sklearn.model_selection import GridSearchCV
 #user defined variables
 IMG_SIZE = 256
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-MODEL_FNAME = '/ghome/group01/models/patches/mlp_patches32.h5'
-RESULTS = '/ghome/group01/results/bow/'
+MODEL_FNAME = '/ghome/group01/group01/project23-24-01/Task2/models/patches/mlp_patches32.h5'
+RESULTS = '/ghome/group01/group01/project23-24-01/Task2/results/mlp_bovw_svm/'
 
-train_images_filenames = pickle.load(open('/home/group01/data/train_images_filenames.dat','rb'))
-test_images_filenames = pickle.load(open('/home/group01/data/test_images_filenames.dat','rb'))
-train_labels = pickle.load(open('/home/group01/data/train_labels.dat','rb'))
-test_labels = pickle.load(open('/home/group01/data/test_labels.dat','rb'))
+
+train_images_filenames = pickle.load(open('/ghome/group01/group01/project23-24-01/Task2/data/train_images_filenames.dat','rb'))
+test_images_filenames = pickle.load(open('/ghome/group01/group01/project23-24-01/Task2/data/test_images_filenames.dat','rb'))
+train_labels = pickle.load(open('/ghome/group01/group01/project23-24-01/Task2/data/train_labels.dat','rb'))
+test_labels = pickle.load(open('/ghome/group01/group01/project23-24-01/Task2/data/test_labels.dat','rb'))
 
 model = load_model(MODEL_FNAME)
 model = Model(inputs=model.input, outputs=model.layers[-2].output)
