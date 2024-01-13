@@ -255,6 +255,7 @@ scaler.fit(train_features)
 strain_features = scaler.transform(train_features)
 stest_features = scaler.transform(test_features)
 
+iscaler = StandardScaler()
 iscaler.fit(itrain_features)
 sitrain_features = iscaler.transform(itrain_features)
 sitest_features = iscaler.transform(itest_features)
