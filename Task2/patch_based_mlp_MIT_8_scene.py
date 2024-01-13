@@ -124,6 +124,8 @@ if  not os.path.exists(MODEL_FNAME) or train:
                       WandbMetricsLogger(log_freq=5),
                       WandbModelCheckpoint("models"),
                     ])
+  print('Saving the model into W&B \n')
+  model.save(os.path.join(wandb.run.dir, "model.h5"))
   wandb.finish()
 
   print('Saving the model into '+MODEL_FNAME+' \n')

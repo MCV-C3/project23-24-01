@@ -119,12 +119,12 @@ model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
 #model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
 #model.add(Dropout(0.6))
 model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-model.add(Dropout(0.5))
+model.add(Dropout(0.65))
 model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-model.add(Dropout(0.5))
+model.add(Dropout(0.65))
 #model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.005)))
 #model.add(Dropout(0.5))
-model.add(Dense(units=256, activation='relu', name='last'))
+model.add(Dense(units=512, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
               optimizer=config.optimizer,
@@ -142,13 +142,13 @@ def lr_schedule(epoch):
   decay_rate = 0.9
   min_lr = 0.001
 
-  if epoch > 50:
+  if epoch > 30:
     return max(base_lr * (decay_rate ** (epoch // 25)), min_lr)
   else:
     return base_lr
 
 # Early Stopping
-early_stopping = EarlyStopping(monitor='val_accuracy', patience=30, restore_best_weights=True)
+early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
 
 print('Start training...\n')
 history = model.fit(
@@ -158,21 +158,13 @@ history = model.fit(
         verbose=0,
         callbacks=[
                       WandbMetricsLogger(log_freq=5),
-                      WandbModelCheckpoint("models", save_weights=True, save_model=True),
+                      WandbModelCheckpoint("val_loss"),
                       LearningRateScheduler(lr_schedule),
                       early_stopping
                     ])
 
-
-print('Saving the model into '+MODEL_FNAME+' \n')
-model.save_weights(WEIGHTS_FNAME)  # always save your weights after training or during training
-model.save(MODEL_FNAME)
-
-# "model.h5" is saved in wandb.run.dir & will be uploaded at the end of training
-model.save(os.path.join(wandb.run.dir, "model1.h5"))
-
-# Save a model file manually from the current directory:
-wandb.save('model11.h5')
+print('Saving the model into W&B \n')
+model.save(os.path.join(wandb.run.dir, "model.h5"))
 
 wandb.finish()
 

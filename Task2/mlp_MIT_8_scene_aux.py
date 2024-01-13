@@ -158,7 +158,8 @@ history = model.fit(
                       LearningRateScheduler(lr_schedule),
                       early_stopping
                     ])
-
+print('Saving the model into W&B \n')
+model.save(os.path.join(wandb.run.dir, "model.h5"))
 wandb.finish()
 
 print('Saving the model into '+MODEL_FNAME+' \n')
