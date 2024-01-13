@@ -44,8 +44,8 @@ formatted_datetime = current_datetime.strftime("%Y%m%d_%H_%M")
 IMG_SIZE    = 32
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-WEIGHTS_FNAME = f'/ghome/group01/weights/{formatted_datetime}_weights.h5'
-MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}_model.h5'
+WEIGHTS_FNAME = f'//ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_{formatted_datetime}_weights.h5'
+MODEL_FNAME = f'/ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_{formatted_datetime}_model.h5'
 RESULTS_DIR = '/ghome/group01/group01/project23-24-01/Task2/results/mlp_svm/'
 
 
@@ -117,14 +117,14 @@ model = Sequential()
 input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
 model.add(input) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-#model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
-#model.add(Dropout(0.6))
 model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
 model.add(Dropout(0.7))
-#model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-#model.add(Dropout(0.7))
-#model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.005)))
-#model.add(Dropout(0.5))
+model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='second'))
+model.add(Dropout(0.7))
+model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='third'))
+model.add(Dropout(0.7))
+model.add(Dense(units=256, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='fourth'))
+model.add(Dropout(0.5))
 model.add(Dense(units=256, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
@@ -169,6 +169,11 @@ model.save(os.path.join(wandb.run.dir, "model.h5"))
 
 wandb.finish()
 
+print('Saving the model into '+MODEL_FNAME+' \n')
+model.save(MODEL_FNAME)  # always save your weights after training or during training
+model.save_weights(WEIGHTS_FNAME)
+print('Done!\n')
+
   # summarize history for accuracy
 plt.plot(history.history['accuracy'])
 plt.plot(history.history['val_accuracy'])
@@ -191,7 +196,7 @@ plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_loss.jpg')
  #crop the model up to a certain layer
 layer = 'last'
 model_layer = keras.Model(inputs=input, outputs=model.get_layer(layer).output)
-model_initial_layer = keras.Model(inputs=input, outputs=model.get_layer("first").output)
+model_initial_layer = keras.Model(inputs=input, outputs=model.get_layer("second").output)
 
 # get train and test labels
 train_labels = pickle.load(open('data/train_labels.dat','rb')) 
@@ -218,6 +223,7 @@ for class_folder in class_folders:
 
 train_features = np.vstack(train_features)
 itrain_features = np.vstack(itrain_features)
+  
 
 print('Getting Test Features...')
 # get test features
@@ -243,6 +249,15 @@ itest_features = np.vstack(itest_features)
 
 
 
+scaler = StandardScaler()
+scaler.fit(train_features)
+strain_features = scaler.transform(train_features)
+stest_features = scaler.transform(test_features)
+
+iscaler.fit(itrain_features)
+sitrain_features = iscaler.transform(itrain_features)
+sitest_features = iscaler.transform(itest_features)
+
 #get classification
 #classification = model.predict(x/255.0)
 #print(f'classification for image {os.path.join(directory, os.listdir(directory)[0] )}:')
@@ -259,5 +274,20 @@ iclassifier = SVC(C=0.01, kernel='linear', gamma=1)
 iclassifier.fit(itrain_features,train_labels)
 accuracy = iclassifier.score(itest_features, test_labels)
 print('Init Layer SVM accuracy: ', accuracy)
+
+# Standarized
+sclassifier = SVC(C=0.01, kernel='linear', gamma=1)
+sclassifier.fit(strain_features,train_labels)
+accuracy = sclassifier.score(stest_features, test_labels)
+print('STD SVM accuracy: ', accuracy)
+
+siclassifier = SVC(C=0.01, kernel='linear', gamma=1)
+siclassifier.fit(sitrain_features,train_labels)
+accuracy = siclassifier.score(sitest_features, test_labels)
+print('STD Init Layer SVM accuracy: ', accuracy)
+
+roc_curve(test_features, test_labels, classifier, RESULTS_DIR+f'{formatted_datetime}_ROC_bow.png')
+
+display_multilabel_confusion_matrix(test_features, test_labels, classifier, RESULTS_DIR+f'{formatted_datetime}_confusion_matrix_box.png')
 
 print('Done!')
