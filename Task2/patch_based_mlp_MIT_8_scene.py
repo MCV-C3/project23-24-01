@@ -3,6 +3,9 @@ os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "jax" or "torch"!
 
 from utils import *
 import keras
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense, Reshape, Input
@@ -116,7 +119,7 @@ if  not os.path.exists(MODEL_FNAME) or train:
   print('WARNING: model file '+MODEL_FNAME+' do not exists!\n')
   print('Start training...\n')
   
-  model.fit(train_dataset,
+  history = model.fit(train_dataset,
             epochs=150,
             validation_data=validation_dataset,
             verbose=0,
@@ -132,6 +135,24 @@ if  not os.path.exists(MODEL_FNAME) or train:
   model.save_weights(MODEL_FNAME)  # always save your weights after training or during training
   print('Done!\n')
 
+# accuracy
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'validation'], loc='upper left')
+plt.savefig(f'{formatted_datetime}_accuracy_patch.jpg')
+plt.close()
+
+# loss
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'validation'], loc='upper left')
+plt.savefig(f'{formatted_datetime}_loss_patch.jpg')
 
 print('Building MLP model for testing...\n')
 
