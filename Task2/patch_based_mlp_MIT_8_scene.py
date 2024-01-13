@@ -107,6 +107,8 @@ def build_mlp(input_size=PATCH_SIZE, phase='train'):
     else:
         model.add(Dense(units=8, activation='softmax', kernel_regularizer=regularizers.l2(0.001)))
 
+    return model
+
 print('Building MLP model...\n')
 
 model = build_mlp(input_size=PATCH_SIZE)
