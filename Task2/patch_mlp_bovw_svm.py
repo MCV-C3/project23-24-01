@@ -14,7 +14,7 @@ from sklearn.model_selection import GridSearchCV
 #user defined variables
 IMG_SIZE = 256
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-MODEL_FNAME = '/ghome/group01/group01/project23-24-01/Task2/models/patches/mlp_patches32.h5'
+MODEL_FNAME = '/ghome/group01/group01/project23-24-01/Task2/models/patches/mlp_patches.h5'
 RESULTS = '/ghome/group01/group01/project23-24-01/Task2/results/mlp_bovw_svm/'
 
 
