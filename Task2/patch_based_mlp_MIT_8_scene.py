@@ -98,7 +98,6 @@ def build_mlp(input_size=PATCH_SIZE, phase='train'):
     model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
     model.add(Dropout(0.7))
     model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
-    model.add(Dropout(0.7))
     model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.001)))
     model.add(Dropout(0.7))
     if phase == 'test':
