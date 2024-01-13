@@ -2,13 +2,13 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "jax" or "torch"!
 
 from utils import *
-import keras
+from keras import regularizers
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from keras.models import Sequential
-from keras.layers import Dense, Reshape, Input
+from keras.layers import Dense, Reshape, Input, Dropout
 from keras.utils import plot_model
 import numpy as np
 from PIL import Image
@@ -41,7 +41,7 @@ PATCH_SIZE  = 64
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
 PATCHES_DIR = '/ghome/group01/weights/data/MIT_split_patches'+str(PATCH_SIZE)
-MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}.weights.h5'
+MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}_patch.weights.h5'
 
 
 if not os.path.exists(DATASET_DIR):
@@ -95,11 +95,16 @@ def build_mlp(input_size=PATCH_SIZE,phase='train'):
   model = Sequential()
   model.add(Input(shape=(input_size, input_size, 3,),name='input'))
   model.add(Reshape((input_size*input_size*3,)))
-  model.add(Dense(units=2048, activation='relu'))
+  # model.add(Dense(units=2048, activation='relu'))
+  model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+  model.add(Dropout(0.7))
+  model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+  model.add(Dropout(0.7))
+  model.add(Dense(units=256, activation='relu', name='last'))
   if phase=='test':
-    model.add(Dense(units=8, activation='linear')) # In test phase we softmax the average output over the image patches
+    model.add(Dense(units=8, activation='linear'), name='classification') # In test phase we softmax the average output over the image patches
   else:
-    model.add(Dense(units=8, activation='softmax'))
+    model.add(Dense(units=8, activation='softmax'), name='classification')
   return model
 
 
@@ -142,7 +147,7 @@ plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig(f'{formatted_datetime}_accuracy_patch.jpg')
+plt.savefig(f'results/mlp_patch/{formatted_datetime}_accuracy_patch.jpg')
 plt.close()
 
 # loss
@@ -152,7 +157,7 @@ plt.title('model loss')
 plt.ylabel('loss')
 plt.xlabel('epoch')
 plt.legend(['train', 'validation'], loc='upper left')
-plt.savefig(f'{formatted_datetime}_loss_patch.jpg')
+plt.savefig(f'results/mlp_patch/{formatted_datetime}_loss_patch.jpg')
 
 print('Building MLP model for testing...\n')
 
