@@ -94,14 +94,14 @@ validation_dataset = validation_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 def build_mlp(input_size=PATCH_SIZE, phase='train'):
     model = Sequential()
     model.add(Reshape((input_size * input_size * 3,), input_shape=(input_size, input_size, 3)))
-    model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
-    model.add(Dropout(0.5))
-    model.add(Dense(units=1024, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
     model.add(Dense(units=512, activation='relu', kernel_regularizer=regularizers.l2(0.01)))
+    model.add(Dropout(0.5))
+    model.add(Dense(units=256, activation='relu'))
+    model.add(Dropout(0.5))
     if phase == 'test':
-        model.add(Dense(units=8, activation='linear', kernel_regularizer=regularizers.l2(0.01)))
+        model.add(Dense(units=8, activation='linear'))
     else:
-        model.add(Dense(units=8, activation='softmax', kernel_regularizer=regularizers.l2(0.01)))
+        model.add(Dense(units=8, activation='softmax'))
 
     return model
 
