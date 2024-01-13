@@ -214,8 +214,8 @@ with open('test_features.dat', 'wb') as file:
 """
 
 # get train and test labels
-train_labels = pickle.load(open('train_labels.dat','rb')) 
-test_labels = pickle.load(open('test_labels.dat','rb'))
+train_labels = pickle.load(open('data/train_labels.dat','rb')) 
+test_labels = pickle.load(open('data/test_labels.dat','rb'))
 
 print('Getting Training Features...')
 # get training features
