@@ -14,6 +14,7 @@ from keras.utils import plot_model
 from keras.callbacks import LearningRateScheduler, EarlyStopping
 from keras import regularizers
 from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
 
 import matplotlib
 matplotlib.use('Agg')
@@ -27,14 +28,6 @@ import pickle
 IMG_SIZE    = 32
 BATCH_SIZE  = 16
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
-WEIGHTS_FNAME = f'/ghome/group01/weights/{formatted_datetime}_weights.h5'
-MODEL_FNAME = f'/ghome/group01/weights/{formatted_datetime}_model.h5'
-
-
-if not os.path.exists(DATASET_DIR):
-  print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
-  quit()
-
 
 #Build the Multi Layer Perceptron model
 model = Sequential()
@@ -45,12 +38,11 @@ model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l
 model.add(Dropout(0.7))
 model.add(Dense(units=128, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
-model.compile(loss=config.loss,
-              optimizer=config.optimizer,
-              metrics=[config.metric])
+model.compile(loss="categorical_crossentropy",
+              optimizer="sgd",
+              metrics=["accuracy"])
 
 print(model.summary())
-plot_model(model, to_file=f'{RESULTS_DIR}/{formatted_datetime}_modelMLP.png', show_shapes=True, show_layer_names=True)
 
 # Load the best model
 model.load_weights("/ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_20240113_17_00_weights.h5")
