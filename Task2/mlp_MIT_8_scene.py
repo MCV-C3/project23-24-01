@@ -49,6 +49,7 @@ WEIGHTS_FNAME = f'//ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_
 MODEL_FNAME = f'/ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_{formatted_datetime}_model.h5'
 RESULTS_DIR = '/ghome/group01/group01/project23-24-01/Task2/results/mlp_svm/'
 
+load = False
 
 if not os.path.exists(DATASET_DIR):
   print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
@@ -149,7 +150,6 @@ def lr_ct(epoch):
 # Early Stopping
 early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
 
-load = True
 if not load:
   print('Start training...\n')
   history = model.fit(
@@ -160,7 +160,7 @@ if not load:
           callbacks=[
                         WandbMetricsLogger(log_freq=5),
                         WandbModelCheckpoint("val_loss"),
-                        LearningRateScheduler(lr_ct),
+                        LearningRateScheduler(lr_schedule),
                         early_stopping
                       ])
 
