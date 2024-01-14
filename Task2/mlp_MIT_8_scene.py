@@ -49,7 +49,6 @@ WEIGHTS_FNAME = f'//ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_
 MODEL_FNAME = f'/ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_{formatted_datetime}_model.h5'
 RESULTS_DIR = '/ghome/group01/group01/project23-24-01/Task2/results/mlp_svm/'
 
-load = False
 
 if not os.path.exists(DATASET_DIR):
   print('ERROR: dataset directory '+DATASET_DIR+' does not exist!\n')
@@ -103,24 +102,14 @@ validation_dataset = validation_dataset.prefetch(buffer_size=tf.data.AUTOTUNE)
 
 
 print('Building MLP model...\n')
-
-"""
-shortcut = model.get_layer(name='first').output
-main_path = model.layers[5].output 
-shortcut = Reshape((256,), name='shortcut_reshape')(shortcut)
-main_path = Add()([main_path, shortcut])
-"""
-
-# , kernel_regularizer=regularizers.l1(reg_rate) 
-
 #Build the Multi Layer Perceptron model
 model = Sequential()
-input = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
-model.add(input) # Input tensor
+input_layer = Input(shape=(IMG_SIZE, IMG_SIZE, 3,),name='input')
+model.add(input_layer) # Input tensor
 model.add(Reshape((IMG_SIZE*IMG_SIZE*3,),name='reshape'))
-model.add(Dense(units=4096, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
+model.add(Dense(units=2048, activation='relu', kernel_regularizer=regularizers.l2(0.01), name='first'))
 model.add(Dropout(0.7))
-model.add(Dense(units=256, activation='relu', name='last'))
+model.add(Dense(units=128, activation='relu', name='last'))
 model.add(Dense(units=8, activation='softmax',name='classification'))
 model.compile(loss=config.loss,
               optimizer=config.optimizer,
@@ -150,149 +139,44 @@ def lr_ct(epoch):
 # Early Stopping
 early_stopping = EarlyStopping(monitor='val_loss', patience=30, restore_best_weights=True)
 
-if not load:
-  print('Start training...\n')
-  history = model.fit(
-          train_dataset,
-          epochs=250,
-          validation_data=validation_dataset,
-          verbose=0,
-          callbacks=[
-                        WandbMetricsLogger(log_freq=5),
-                        WandbModelCheckpoint("val_loss"),
-                        LearningRateScheduler(lr_schedule),
-                        early_stopping
-                      ])
+print('Start training...\n')
+history = model.fit(
+        train_dataset,
+        epochs=250,
+        validation_data=validation_dataset,
+        verbose=0,
+        callbacks=[
+                      WandbMetricsLogger(log_freq=5),
+                      WandbModelCheckpoint("val_loss"),
+                      LearningRateScheduler(lr_schedule),
+                      early_stopping
+                    ])
 
-  print('Saving the model into W&B \n')
-  model.save(os.path.join(wandb.run.dir, "model.h5"))
+print('Saving the model into W&B \n')
+model.save(os.path.join(wandb.run.dir, "model.h5"))
 
-  wandb.finish()
+wandb.finish()
 
-  print('Saving the model into '+MODEL_FNAME+' \n')
-  model.save(MODEL_FNAME)  # always save your weights after training or during training
-  model.save_weights(WEIGHTS_FNAME)
-  print('Done!\n')
+print('Saving the model into '+MODEL_FNAME+' \n')
+model.save(MODEL_FNAME)  
+model.save_weights(WEIGHTS_FNAME)
+print('Done!\n')
 
-    # summarize history for accuracy
-  plt.plot(history.history['accuracy'])
-  plt.plot(history.history['val_accuracy'])
-  plt.title('model accuracy')
-  plt.ylabel('accuracy')
-  plt.xlabel('epoch')
-  plt.legend(['train', 'validation'], loc='upper left')
-  plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_accuracy.jpg')
-  plt.close()
-    # summarize history for loss
-  plt.plot(history.history['loss'])
-  plt.plot(history.history['val_loss'])
-  plt.title('model loss')
-  plt.ylabel('loss')
-  plt.xlabel('epoch')
-  plt.legend(['train', 'validation'], loc='upper left')
-  plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_loss.jpg')
+  # summarize history for accuracy
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
+plt.title('model accuracy')
+plt.ylabel('accuracy')
+plt.xlabel('epoch')
+plt.legend(['train', 'validation'], loc='upper left')
+plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_accuracy.jpg')
+plt.close()
+  # summarize history for loss
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('model loss')
+plt.ylabel('loss')
+plt.xlabel('epoch')
+plt.legend(['train', 'validation'], loc='upper left')
+plt.savefig(f'{RESULTS_DIR}/{formatted_datetime}_loss.jpg')
 
-else:
-  model.load_weights("/ghome/group01/group01/project23-24-01/Task2/weights/mlp_svm_20240113_17_00_weights.h5")
-
-
-#to get the output of a given layer
-#crop the model up to a certain layer
-model_layer = keras.Model(inputs=input, outputs=model.get_layer('last').output)
-model_initial_layer = keras.Model(inputs=input, outputs=model.get_layer("first").output)
-
-# get train and test labels
-train_labels = pickle.load(open('data/train_labels.dat','rb')) 
-test_labels = pickle.load(open('data/test_labels.dat','rb'))
-
-
-print('Getting Training Features...')
-# get training features
-train_features = []
-itrain_features = []
-train_directory = DATASET_DIR+'/train'
-class_folders = os.listdir(train_directory)
-
-for class_folder in class_folders:
-  class_path = os.path.join(train_directory, class_folder)
-  training_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg')]
-
-  for image_file in training_image_files:
-    x = np.asarray(Image.open(os.path.join(class_path, image_file)))
-    x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
-    features = model_layer.predict(x/255.0)
-    train_features.append(features)
-    ifeatures = model_initial_layer.predict(x/255.0)
-    itrain_features.append(ifeatures)
-
-train_features = np.vstack(train_features)
-itrain_features = np.vstack(itrain_features)
-  
-
-print('Getting Test Features...')
-# get test features
-test_features = []
-itest_features = []
-test_directory = DATASET_DIR+'/test'
-class_folders = os.listdir(test_directory)
-
-for class_folder in class_folders:
-  class_path = os.path.join(test_directory, class_folder)
-  test_image_files = [f for f in os.listdir(class_path) if f.endswith('.jpg')]
-
-  for image_file in test_image_files:
-    x = np.asarray(Image.open(os.path.join(class_path, image_file)))
-    x = np.expand_dims(np.resize(x, (IMG_SIZE, IMG_SIZE, 3)), axis=0)
-    features = model_layer.predict(x/255.0)
-    test_features.append(features)
-    ifeatures = model_initial_layer.predict(x/255.0)
-    itest_features.append(ifeatures)
-
-test_features = np.vstack(test_features)
-itest_features = np.vstack(itest_features)
-
-
-
-scaler = StandardScaler()
-scaler.fit(train_features)
-strain_features = scaler.transform(train_features)
-stest_features = scaler.transform(test_features)
-
-iscaler = StandardScaler()
-iscaler.fit(itrain_features)
-sitrain_features = iscaler.transform(itrain_features)
-sitest_features = iscaler.transform(itest_features)
-
-#get classification
-#classification = model.predict(x/255.0)
-#print(f'classification for image {os.path.join(directory, os.listdir(directory)[0] )}:')
-#print(classification/np.sum(classification,axis=1))
-
-
-# SVM
-classifier = SVC(C=0.01, kernel='linear', gamma=1)
-classifier.fit(train_features,train_labels)
-accuracy = classifier.score(test_features, test_labels)
-print('SVM accuracy: ', accuracy)
-
-iclassifier = SVC(C=0.01, kernel='linear', gamma=1)
-iclassifier.fit(itrain_features,train_labels)
-accuracy = iclassifier.score(itest_features, test_labels)
-print('Init Layer SVM accuracy: ', accuracy)
-
-# Standarized
-sclassifier = SVC(C=0.01, kernel='linear', gamma=1)
-sclassifier.fit(strain_features,train_labels)
-accuracy = sclassifier.score(stest_features, test_labels)
-print('STD SVM accuracy: ', accuracy)
-
-siclassifier = SVC(C=0.01, kernel='linear', gamma=1)
-siclassifier.fit(sitrain_features,train_labels)
-accuracy = siclassifier.score(sitest_features, test_labels)
-print('STD Init Layer SVM accuracy: ', accuracy)
-
-roc_curve(test_features, test_labels, classifier, RESULTS_DIR+f'{formatted_datetime}_ROC_bow.png')
-
-display_multilabel_confusion_matrix(test_features, test_labels, classifier, RESULTS_DIR+f'{formatted_datetime}_confusion_matrix_box.png')
-
-print('Done!')
