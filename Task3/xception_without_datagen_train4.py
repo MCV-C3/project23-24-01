@@ -64,9 +64,7 @@ test_dataset = test_data_generator.flow_from_directory(
     shuffle=True
 )
 
-print(f'gpus? {keras.distribution.list_devices(device_type="GPU")}')
-print('GPU name: ', tf.config.list_physical_devices('GPU'))
-
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 
 # create the base pre-trained model
@@ -99,6 +97,29 @@ history = model.fit(train_dataset,
                     validation_data=validation_dataset,
                     verbose=2)
 
+
+if True:
+    #matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    # summarize history for accuracy
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.savefig('tmp_results/accuracy_train4_frozen.jpg')
+    plt.close()
+    # summarize history for loss
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.savefig('tmp_results/loss_train4_frozen.jpg')
+    plt.close()
+    
 # at this point, the top layers are well trained and we can start fine-tuning
 # convolutional layers from inception V3. We will freeze the bottom N layers
 # and train the remaining top layers.
@@ -156,3 +177,4 @@ if True:
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
     plt.savefig('tmp_results/loss_train4.jpg')
+    plt.close()
