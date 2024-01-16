@@ -2,7 +2,7 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "jax" or "torch"!
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-from utils import *
+from task3_utils import *
 import keras
 import tensorflow as tf
 from keras.layers import Dense
@@ -64,9 +64,7 @@ test_dataset = test_data_generator.flow_from_directory(
     shuffle=True
 )
 
-print(f'gpus? {keras.distribution.list_devices(device_type="GPU")}')
-print('GPU name: ', tf.config.list_physical_devices('GPU'))
-
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 
 
 # create the base pre-trained model

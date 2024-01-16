@@ -2,19 +2,18 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "jax" or "torch"!
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-from task3_utils import *
+from utils import *
 import keras
 import tensorflow as tf
 from keras.layers import Dense
 from keras.utils import plot_model
 from keras.optimizers import SGD
 
-DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_small_train_2'
+DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
 IMG_WIDTH = 224
 IMG_HEIGHT=224
 BATCH_SIZE=32
 NUMBER_OF_EPOCHS=20
-NUM_CLASSES=8
 
 from keras.applications.xception import Xception
 from keras.applications.xception import preprocess_input
@@ -23,10 +22,21 @@ from keras.models import Model
 from keras.layers import Dense, GlobalAveragePooling2D
 
 import tensorflow as tf
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-# Define the data generator
-train_data_generator = tf.keras.preprocessing.image.ImageDataGenerator(
+print(f'gpus? {keras.distribution.list_devices(device_type="GPU")}')
+print('GPU name: ', tf.config.list_physical_devices('GPU'))
+
+# Define the data generator for data augmentation and preprocessing
+train_data_generator = ImageDataGenerator(
     preprocessing_function=preprocess_input,
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    vertical_flip=False
 )
 
 # Load and preprocess the training dataset
@@ -38,8 +48,9 @@ train_dataset = train_data_generator.flow_from_directory(
     shuffle=True
 )
 
+
 # Load and preprocess the validation dataset
-validation_data_generator = tf.keras.preprocessing.image.ImageDataGenerator(
+validation_data_generator = ImageDataGenerator(
     preprocessing_function=preprocess_input
 )
 
@@ -52,7 +63,7 @@ validation_dataset = validation_data_generator.flow_from_directory(
 )
 
 # Load and preprocess the test dataset
-test_data_generator = tf.keras.preprocessing.image.ImageDataGenerator(
+test_data_generator = ImageDataGenerator(
     preprocessing_function=preprocess_input
 )
 
@@ -64,11 +75,6 @@ test_dataset = test_data_generator.flow_from_directory(
     shuffle=True
 )
 
-print(f'gpus? {keras.distribution.list_devices(device_type="GPU")}')
-print('GPU name: ', tf.config.list_physical_devices('GPU'))
-
-
-
 # create the base pre-trained model
 base_model = Xception(weights='imagenet', include_top=False)
 
@@ -78,7 +84,7 @@ x = GlobalAveragePooling2D()(x)
 # let's add a fully-connected layer
 x = Dense(1024, activation='relu')(x)
 # and a logistic layer
-predictions = Dense(NUM_CLASSES, activation='softmax')(x)
+predictions = Dense(8, activation='softmax')(x)
 
 # this is the model we will train
 model = Model(inputs=base_model.input, outputs=predictions)
@@ -137,6 +143,7 @@ print(history.history.keys())
 # list all data in history
 
 if True:
+    import matplotlib
     #matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     # summarize history for accuracy
@@ -146,7 +153,7 @@ if True:
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
-    plt.savefig('tmp_results/accuracy_train2.jpg')
+    plt.savefig('accuracy.jpg')
     plt.close()
     # summarize history for loss
     plt.plot(history.history['loss'])
@@ -155,4 +162,4 @@ if True:
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
-    plt.savefig('tmp_results/loss_train2.jpg')
+    plt.savefig('loss.jpg')

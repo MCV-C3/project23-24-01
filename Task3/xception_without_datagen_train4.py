@@ -2,7 +2,7 @@ import os
 os.environ["KERAS_BACKEND"] = "tensorflow"  # Or "jax" or "torch"!
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-from utils import *
+from task3_utils import *
 import keras
 import tensorflow as tf
 from keras.layers import Dense
