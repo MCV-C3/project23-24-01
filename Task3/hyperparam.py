@@ -27,6 +27,9 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import wandb
 from wandb.keras import WandbMetricsLogger, WandbModelCheckpoint
 
+from keras.callbacks import LearningRateScheduler, EarlyStopping
+from keras import regularizers
+
 import optuna
 
 print(f'gpus? {keras.distribution.list_devices(device_type="GPU")}')
@@ -37,8 +40,7 @@ wandb.login(key="d1eed7aeb7e90a11c24c3644ed2df2d6f2b25718")
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_split'
 IMG_WIDTH = 224
 IMG_HEIGHT=224
-BATCH_SIZE=32
-NUMBER_OF_EPOCHS=20
+NUMBER_OF_EPOCHS=300
 
 train_dataset = None
 test_dataset = None
@@ -95,7 +97,7 @@ def get_datasets(batch_size):
 
 def objective(trial):
     batch_size = trial.suggest_categorical('batch_size', [16, 32, 64])
-    optimizer_name = trial.suggest_categorical('optimizer', ['SGD', 'RMSprop', 'Adagrad', 'Adadelta', 'Adam'])
+    optimizer_name = trial.suggest_categorical('optimizer', ['sgd', 'rmsprop', 'adagrad', 'adadelta', 'adam'])
     learn_rate = trial.suggest_loguniform('learn_rate', 1e-4, 0.3)
     momentum = trial.suggest_uniform('momentum', 0.0, 0.9)
     dropout = trial.suggest_uniform('dropout', 0.0, 0.8)
@@ -127,17 +129,28 @@ def objective(trial):
     plot_model(model, to_file='modelXception.png', show_shapes=True, show_layer_names=True)
 
     # compile the model (should be done *after* setting layers to non-trainable)
-    model.compile(loss='categorical_crossentropy',optimizer='adadelta', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy',optimizer=optimizer_name, metrics=['accuracy'])
 
+    # Early Stopping
+    early_stopping = EarlyStopping(monitor='val_loss', patience=20, restore_best_weights=True)
+
+    print('Start training...\n')
     # train the model on the new data for a few epochs
     history = model.fit(train_dataset,
                         epochs=NUMBER_OF_EPOCHS,
                         validation_data=validation_dataset,
-                        verbose=0)
+                        verbose=0,
+                        callbacks=[
+                        WandbMetricsLogger(log_freq=5),
+                        WandbModelCheckpoint("val_loss"),
+                        early_stopping
+                        ])
+    
+    return min(history.history['val_loss'])
 
 
 
-study = optuna.create_study(direction='maximize')
+study = optuna.create_study(direction='minimize')
 study.optimize(objective, n_trials=100, timeout=600)
 
 # Print the best hyperparameters and result
