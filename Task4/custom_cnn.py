@@ -4,8 +4,8 @@ from keras.layers import Dense, Dropout, Conv2D, BatchNormalization, MaxPooling2
 from keras.models import Sequential
 import matplotlib.pyplot as plt
 
-MODEL_NAME = 'model_name.h5'
-WEIGHTS_DIR = f'/ghome/group01/group01/project23-24-01/Task4/weights/{MODEL_NAME}'
+MODEL_NAME = 'model_name'
+WEIGHTS_DIR = f'/ghome/group01/group01/project23-24-01/Task4/weights/{MODEL_NAME}.h5'
 RESULTS_DIR = '/ghome/group01/group01/project23-24-01/Task4/results'
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_small_train_1'
 DATASET_DIR_GLOBAL = '/ghome/mcv/datasets/C3/MIT_split'
@@ -96,7 +96,7 @@ def plot_metrics(history):
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
-    plt.savefig(f'{RESULTS_DIR}/model_accuracy.jpg')
+    plt.savefig(f'{RESULTS_DIR}/{MODEL_NAME}_accuracy.jpg')
     plt.close()
 
     # Summarize history for loss
@@ -106,14 +106,14 @@ def plot_metrics(history):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper left')
-    plt.savefig(f'{RESULTS_DIR}/model_loss.jpg')
+    plt.savefig(f'{RESULTS_DIR}/{MODEL_NAME}_loss.jpg')
     plt.close()
 
 train_dataset, validation_dataset, test_dataset = get_datasets()
 model = build_model()
 
 print(model.summary())
-plot_model(model, to_file=RESULTS_DIR / 'model.png', show_shapes=True, show_layer_names=True)
+plot_model(model, to_file=f'{RESULTS_DIR}/{MODEL_NAME}.png', show_shapes=True, show_layer_names=True)
 
 print('Start training...\n')
 history = model.fit(
