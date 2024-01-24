@@ -27,6 +27,7 @@ from keras.layers import Dense, GlobalAveragePooling2D
 import tensorflow as tf
 
 # Define the data generator
+<<<<<<< HEAD
 train_data_generator = tf.keras.preprocessing.image.ImageDataGenerator(
     preprocessing_function=preprocess_input,
     rotation_range=20,  # rotation_range: Randomly rotate images by a specified degree.
@@ -36,6 +37,20 @@ train_data_generator = tf.keras.preprocessing.image.ImageDataGenerator(
     zoom_range=0.2,  # zoom_range: Randomly zoom into images.
     horizontal_flip=True,  # horizontal_flip: Randomly flip images horizontally.
     fill_mode='nearest'  # fill_mode: Strategy for filling in newly created pixels after a rotation or a shift.
+=======
+# train_data_generator = tf.keras.preprocessing.image.ImageDataGenerator(
+#     preprocessing_function=preprocess_input,
+#     rotation_range=20,  # rotation_range: Randomly rotate images by a specified degree.
+#     width_shift_range=0.2,  # width_shift_range: Randomly shift the width of images.
+#     height_shift_range=0.2,  # height_shift_range: Randomly shift the height of images.
+#     shear_range=0.2,  # shear_range: Apply shear transformation.
+#     zoom_range=0.2,  # zoom_range: Randomly zoom into images.
+#     horizontal_flip=True,  # horizontal_flip: Randomly flip images horizontally.
+#     fill_mode='nearest'  # fill_mode: Strategy for filling in newly created pixels after a rotation or a shift.
+# )
+train_data_generator = tf.keras.preprocessing.image.ImageDataGenerator(
+    preprocessing_function=preprocess_input,
+>>>>>>> 1796c21ffdcf6381367bb82c13e84126cf14778a
 )
 
 # Load and preprocess the training dataset
