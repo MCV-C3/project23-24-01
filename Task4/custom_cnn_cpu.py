@@ -1,10 +1,10 @@
 from keras.utils import plot_model
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from keras.layers import Dense, Dropout, Conv2D, BatchNormalization, MaxPooling2D, Flatten
-from keras.models import Sequential
+from keras.layers import Dense, Dropout, Conv2D, BatchNormalization, MaxPooling2D, GlobalAveragePooling2D, Add, Input
+from keras.models import Model
 import matplotlib.pyplot as plt
 
-MODEL_NAME = 'model_name'
+MODEL_NAME = 'model_cpu_v2'
 WEIGHTS_DIR = f'/ghome/group01/group01/project23-24-01/Task4/weights/{MODEL_NAME}.h5'
 RESULTS_DIR = '/ghome/group01/group01/project23-24-01/Task4/results'
 DATASET_DIR = '/ghome/mcv/datasets/C3/MIT_small_train_1'
@@ -12,7 +12,7 @@ DATASET_DIR_GLOBAL = '/ghome/mcv/datasets/C3/MIT_split'
 
 NUM_CLASSES = 8
 BATCH_SIZE = 64
-IMG_SIZE = (64, 64)
+IMG_SIZE = (256, 256)
 EPOCHS = 250
 
 def get_datasets():
@@ -58,31 +58,39 @@ def get_datasets():
     return train_dataset, validation_dataset, test_dataset
 
 def build_model():
-    model = Sequential()
-    # Input layer
-    model.add(Conv2D(32, (3, 3), input_shape=(IMG_SIZE[0], IMG_SIZE[1], 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    num_kernels = 16
+    inputs = Input(shape=(IMG_SIZE[0], IMG_SIZE[1], 3))
 
-    # Second convolutional layer
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    # Initial Convolution Block
+    x = Conv2D(num_kernels, (3, 3), activation='relu')(inputs)
+    x = BatchNormalization()(x)
+    x = MaxPooling2D((3, 3))(x)
 
-    # Third convolutional layer
-    model.add(Conv2D(128, (3, 3), activation='relu'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    # Residual Blocks
+    for _ in range(2):
+        residual = x
+        x = Conv2D(2*num_kernels, (3, 3), activation='relu', padding='same')(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.7)(x)
+        x = Conv2D(2*num_kernels, (3, 3), activation='relu', padding='same')(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.7)(x)
+        if residual.shape[-1] != x.shape[-1]:
+            residual = Conv2D(2*num_kernels, (1, 1), activation='relu', padding='same')(residual)
 
-    # Flatten the output before feeding into dense layers
-    model.add(Flatten())
+        x = Add()([x, residual])
+        x = MaxPooling2D((3, 3))(x)
 
-    # Dense layers with dropout for regularization
-    model.add(Dense(512, activation='relu'))
-    model.add(Dropout(0.5))
+    # Global Average Pooling and Dense Layers
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(2048, activation='relu')(x)
+    x = Dropout(0.7)(x)
 
     # Output layer
-    model.add(Dense(NUM_CLASSES, activation='softmax'))
+    predictions = Dense(NUM_CLASSES, activation='softmax')(x)
+
+    # Create the model
+    model = Model(inputs=inputs, outputs=predictions)
 
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
